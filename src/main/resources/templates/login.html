@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso - Sistema de Becas UAGRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul: #1a3a6b;
+            --azul-claro: #2563eb;
+            --dorado: #c8902a;
+            --gris: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a3a6b 0%, #0f2044 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-wrapper {
+            display: flex;
+            width: 900px;
+            min-height: 520px;
+            border-radius: 1.5rem;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        }
+        .login-brand {
+            background: linear-gradient(160deg, #c8902a 0%, #a06e1a 100%);
+            width: 42%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        .login-brand .escudo {
+            width: 90px; height: 90px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+        .login-brand h1 { color: white; font-size: 1.5rem; font-weight: 700; line-height: 1.3; margin-bottom: 0.75rem; }
+        .login-brand p { color: rgba(255,255,255,0.8); font-size: 0.9rem; line-height: 1.6; }
+        .login-brand .divider { width: 50px; height: 2px; background: rgba(255,255,255,0.4); margin: 1.25rem auto; }
+        .login-form-area {
+            background: white;
+            flex: 1;
+            padding: 3.5rem 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .login-form-area h2 { font-size: 1.6rem; font-weight: 700; color: var(--azul); margin-bottom: 0.4rem; }
+        .login-form-area .subtitle { color: var(--gris); font-size: 0.95rem; margin-bottom: 2rem; }
+        .alert-error {
+            background: #fef2f2; border-left: 4px solid #dc2626;
+            color: #991b1b; padding: 0.85rem 1rem; border-radius: 0.5rem;
+            margin-bottom: 1.5rem; font-size: 0.9rem;
+        }
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label {
+            display: block; font-size: 0.8rem; font-weight: 600;
+            color: var(--azul); margin-bottom: 0.5rem;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .form-group input {
+            width: 100%; padding: 0.85rem 1rem;
+            border: 2px solid #e2e8f0; border-radius: 0.6rem;
+            font-family: 'Outfit', sans-serif; font-size: 0.95rem;
+            color: #1e293b; transition: border-color 0.2s; outline: none;
+        }
+        .form-group input:focus { border-color: var(--azul-claro); background: #f0f6ff; }
+        .btn-ingresar {
+            width: 100%; padding: 1rem;
+            background: linear-gradient(135deg, var(--azul) 0%, var(--azul-claro) 100%);
+            color: white; border: none; border-radius: 0.6rem;
+            font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 600;
+            cursor: pointer; margin-top: 0.5rem; transition: opacity 0.2s;
+        }
+        .btn-ingresar:hover { opacity: 0.9; }
+        .footer-note { text-align: center; margin-top: 2rem; font-size: 0.8rem; color: var(--gris); }
+    </style>
+</head>
+<body>
+<div class="login-wrapper">
+    <div class="login-brand">
+        <div class="escudo">🎓</div>
+        <h1>Sistema de Becas UAGRO</h1>
+        <div class="divider"></div>
+        <p>Departamento de Becas y Financiamiento Educativo</p>
+    </div>
+    <div class="login-form-area">
+        <h2>Iniciar Sesión</h2>
+        <p class="subtitle">Ingresa tus credenciales institucionales</p>
+        <div th:if="${error}" class="alert-error" th:text="${error}"></div>
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label>Correo Institucional</label>
+                <input type="email" name="correo" placeholder="usuario@uagro.mx" required>
+            </div>
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" name="contraseña" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn-ingresar">Ingresar al Sistema</button>
+        </form>
+        <p class="footer-note">UAGRO — Uso exclusivo del personal autorizado</p>
+    </div>
+</div>
+</body>
+</html>

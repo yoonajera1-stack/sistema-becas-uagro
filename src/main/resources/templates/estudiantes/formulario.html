@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${modo == 'crear'} ? 'Registrar Estudiante - Becas UAGRO' : 'Editar Estudiante - Becas UAGRO'">Estudiante</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --azul: #1a3a6b; --dorado: #c8902a; --sidebar-w: 240px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: #f4f6fb; display: flex; min-height: 100vh; }
+
+        /* SIDEBAR */
+        .sidebar { width: var(--sidebar-w); background: var(--azul); min-height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-logo { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo .logo-icon { font-size: 2rem; }
+        .sidebar-logo h2 { color: white; font-size: 0.95rem; font-weight: 700; margin-top: 0.5rem; }
+        .sidebar-logo p { color: rgba(255,255,255,0.5); font-size: 0.75rem; }
+        .sidebar nav { padding: 1rem 0; flex: 1; }
+        .nav-section-label { color: rgba(255,255,255,0.35); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.75rem 1.25rem 0.4rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: rgba(255,255,255,0.75); text-decoration: none; font-size: 0.92rem; font-weight: 500; border-left: 3px solid transparent; transition: background 0.15s; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--dorado); }
+        .nav-item .icon { font-size: 1.1rem; width: 22px; text-align: center; }
+        .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-footer .user-info { color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 0.75rem; }
+        .sidebar-footer .user-info strong { display: block; color: white; font-size: 0.9rem; }
+        .btn-logout { display: block; width: 100%; padding: 0.6rem 1rem; background: rgba(220,38,38,0.2); color: #fca5a5; border: 1px solid rgba(220,38,38,0.3); border-radius: 0.4rem; text-decoration: none; font-size: 0.85rem; text-align: center; }
+        .btn-logout:hover { background: rgba(220,38,38,0.35); color: white; }
+
+        /* MAIN */
+        .main { margin-left: var(--sidebar-w); flex: 1; }
+        .topbar { height: 64px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; padding: 0 2rem; position: sticky; top: 0; z-index: 50; }
+        .topbar h1 { font-size: 1.15rem; font-weight: 600; color: var(--azul); }
+        .content { padding: 2rem; max-width: 900px; }
+
+        /* ALERTAS */
+        .alerta { padding: 0.9rem 1.1rem; border-radius: 0.5rem; margin-bottom: 1.25rem; font-size: 0.9rem; }
+        .alerta-error   { background: #fee2e2; border-left: 4px solid #dc2626; color: #991b1b; }
+        .alerta-success { background: #d1fae5; border-left: 4px solid #059669; color: #065f46; }
+
+        /* TABS DE SECCIÓN */
+        .form-tabs { display: flex; gap: 0.25rem; margin-bottom: 1.5rem; border-bottom: 2px solid #e2e8f0; }
+        .form-tab {
+            padding: 0.65rem 1.1rem; font-size: 0.88rem; font-weight: 600;
+            color: #64748b; cursor: pointer; border: none; background: none;
+            border-bottom: 2px solid transparent; margin-bottom: -2px;
+            font-family: 'Outfit', sans-serif; transition: color 0.15s;
+            display: flex; align-items: center; gap: 0.4rem;
+        }
+        .form-tab:hover { color: var(--azul); }
+        .form-tab.active { color: var(--azul); border-bottom-color: var(--azul); }
+        .form-tab .tab-num {
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #e2e8f0; color: #64748b;
+            font-size: 0.72rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .form-tab.active .tab-num { background: var(--azul); color: white; }
+        .form-tab.completado .tab-num { background: #059669; color: white; }
+
+        /* CARD */
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); padding: 2rem; margin-bottom: 1.25rem; display: none; }
+        .card.visible { display: block; }
+        .card-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #f1f5f9; }
+        .card-header h2 { font-size: 1.05rem; font-weight: 700; color: var(--azul); }
+        .card-header p { font-size: 0.83rem; color: #64748b; margin-top: 0.25rem; }
+
+        /* FORM */
+        .form-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.45rem; font-size: 0.85rem; font-weight: 600; color: #374151; }
+        .form-group label .req { color: #dc2626; margin-left: 2px; }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%; padding: 0.75rem 0.9rem;
+            border: 1.5px solid #e2e8f0; border-radius: 0.5rem;
+            font-family: 'Outfit', sans-serif; font-size: 0.92rem; color: #1e293b;
+            transition: border-color 0.2s, background 0.2s;
+            outline: none; background: #f9fafb;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus { border-color: var(--azul); background: #fff; }
+        .form-group .ayuda { font-size: 0.78rem; color: #94a3b8; margin-top: 0.3rem; }
+
+        /* CHECKBOX VULNERABILIDAD */
+        .check-group { display: flex; align-items: center; gap: 0.6rem; padding: 0.9rem 1rem; background: #f9fafb; border: 1.5px solid #e2e8f0; border-radius: 0.5rem; cursor: pointer; transition: border-color 0.2s; }
+        .check-group:hover { border-color: var(--azul); }
+        .check-group input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--azul); cursor: pointer; }
+        .check-group label { font-size: 0.92rem; font-weight: 600; color: #374151; cursor: pointer; margin: 0; }
+        #panelVulnerabilidad { display: none; margin-top: 1rem; padding: 1rem; background: #fef9ec; border: 1px solid #fde68a; border-radius: 0.5rem; }
+        #panelVulnerabilidad.visible { display: block; }
+
+        /* NAVEGACIÓN ENTRE SECCIONES */
+        .nav-secciones { display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; }
+        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; text-decoration: none; cursor: pointer; font-size: 0.92rem; font-weight: 600; font-family: 'Outfit', sans-serif; display: inline-flex; align-items: center; gap: 0.4rem; transition: opacity 0.15s; }
+        .btn:hover { opacity: 0.88; }
+        .btn-primary   { background: var(--azul); color: white; }
+        .btn-success   { background: #059669; color: white; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-outline   { background: white; color: #374151; border: 1.5px solid #d1d5db; }
+
+        /* INDICADOR DE PROGRESO */
+        .progreso { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .progreso-barra { flex: 1; height: 6px; background: #e2e8f0; border-radius: 9999px; overflow: hidden; }
+        .progreso-fill  { height: 100%; background: var(--azul); border-radius: 9999px; transition: width 0.3s; }
+        .progreso-texto { font-size: 0.8rem; color: #64748b; white-space: nowrap; }
+
+        /* AVISO RF-08 */
+        .aviso-info {
+            background: #eff6ff; border-left: 4px solid #2563eb;
+            padding: 0.85rem 1rem; border-radius: 0 0.4rem 0.4rem 0;
+            font-size: 0.83rem; color: #1e40af; margin-bottom: 1.25rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🎓</div>
+        <h2>Sistema de Becas</h2>
+        <p>UAGRO</p>
+    </div>
+    <nav>
+        <div class="nav-section-label">Principal</div>
+        <a href="/dashboard" class="nav-item"><span class="icon">🏠</span> Inicio</a>
+        <div class="nav-section-label">Gestión</div>
+        <a href="/becas" class="nav-item"><span class="icon">📋</span> Becas</a>
+        <a href="/estudiantes" class="nav-item active"><span class="icon">👨‍🎓</span> Estudiantes</a>
+        <a href="/solicitudes" class="nav-item"><span class="icon">📝</span> Solicitudes</a>
+        <div class="nav-section-label">Sistema</div>
+        <a href="/reportes" class="nav-item"><span class="icon">📊</span> Reportes</a>
+        <a href="/admin" class="nav-item"><span class="icon">⚙️</span> Administración</a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <strong th:text="${usuario != null ? usuario.nombre : 'Usuario'}">Usuario</strong>
+            <span th:text="${usuario != null ? usuario.rol?.nombreRol : ''}">Rol</span>
+        </div>
+        <a href="/logout" class="btn-logout">🚪 Cerrar Sesión</a>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="topbar">
+        <h1 th:text="${modo == 'crear'} ? '➕ Registrar Nuevo Estudiante' : '✏️ Editar Estudiante'">Estudiante</h1>
+    </div>
+    <div class="content">
+
+        <div th:if="${error}"   class="alerta alerta-error"   th:text="${error}"></div>
+        <div th:if="${mensaje}" class="alerta alerta-success" th:text="${mensaje}"></div>
+
+        <!-- BARRA DE PROGRESO -->
+        <div class="progreso">
+            <div class="progreso-barra">
+                <div class="progreso-fill" id="barraProgreso" style="width: 25%"></div>
+            </div>
+            <span class="progreso-texto" id="textoProgreso">Sección 1 de 4</span>
+        </div>
+
+        <!-- PESTAÑAS DE SECCIÓN -->
+        <div class="form-tabs">
+            <button type="button" class="form-tab active" onclick="irSeccion(1)" id="tab1">
+                <span class="tab-num">1</span> Personal
+            </button>
+            <button type="button" class="form-tab" onclick="irSeccion(2)" id="tab2">
+                <span class="tab-num">2</span> Académico
+            </button>
+            <button type="button" class="form-tab" onclick="irSeccion(3)" id="tab3">
+                <span class="tab-num">3</span> Socioeconómico
+            </button>
+            <button type="button" class="form-tab" onclick="irSeccion(4)" id="tab4">
+                <span class="tab-num">4</span> Vulnerabilidad
+            </button>
+        </div>
+
+        <!-- FORMULARIO COMPLETO (una sola form, secciones ocultas/visibles con JS) -->
+        <form th:action="${modo == 'crear'} ? '/estudiantes/guardar' : '/estudiantes/actualizar/' + ${estudiante.idEstudiante}"
+              method="post"
+              th:object="${estudiante}"
+              id="formEstudiante">
+
+            <input type="hidden" th:field="*{idEstudiante}">
+
+            <!-- ══════════════════════════════════════════ -->
+            <!-- SECCIÓN 1: DATOS PERSONALES — RF-06        -->
+            <!-- ══════════════════════════════════════════ -->
+            <div class="card visible" id="seccion1">
+                <div class="card-header">
+                    <h2>👤 Datos Personales</h2>
+                    <p>Información de identificación del estudiante — RF-06 (MO-02)</p>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre Completo <span class="req">*</span></label>
+                        <input type="text" th:field="*{nombre}"
+                               placeholder="Apellido Apellido Nombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>CURP <span class="req">*</span></label>
+                        <input type="text" th:field="*{curp}"
+                               maxlength="18" style="text-transform:uppercase"
+                               placeholder="XXXX000000XXXXXXXX" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Matrícula <span class="req">*</span></label>
+                        <input type="text" th:field="*{matricula}"
+                               placeholder="Ej: 23520332" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Electrónico <span class="req">*</span></label>
+                        <input type="email" th:field="*{correo}"
+                               placeholder="correo@uagro.mx" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" th:field="*{telefono}"
+                               placeholder="747 000 0000">
+                    </div>
+                    <div class="form-group">
+                        <label>Fecha de Nacimiento <span class="req">*</span></label>
+                        <input type="date" th:field="*{fechaNacimiento}" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Género <span class="req">*</span></label>
+                    <select th:field="*{genero}" required>
+                        <option value="">Seleccione…</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="No binario">No binario</option>
+                        <option value="Prefiero no decir">Prefiero no decir</option>
+                    </select>
+                </div>
+
+                <div class="nav-secciones">
+                    <a href="/estudiantes" class="btn btn-outline">✖ Cancelar</a>
+                    <button type="button" class="btn btn-primary" onclick="irSeccion(2)">Siguiente: Académico →</button>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════ -->
+            <!-- SECCIÓN 2: DATOS ACADÉMICOS — RF-06        -->
+            <!-- ══════════════════════════════════════════ -->
+            <div class="card" id="seccion2">
+                <div class="card-header">
+                    <h2>🎓 Datos Académicos</h2>
+                    <p>Información escolar del estudiante — RF-06 (MO-02)</p>
+                </div>
+
+                <!-- ✅ CORREGIDO: name="idEscuela" como @RequestParam separado -->
+                <div class="form-group">
+                    <label>Escuela de la UAGRO <span class="req">*</span></label>
+                    <select name="idEscuela" required>
+                        <option value="">Seleccione la escuela…</option>
+                        <option th:each="esc : ${escuelas}"
+                                th:value="${esc.idEscuela}"
+                                th:text="${esc.nombre} + ' (' + ${esc.tipo} + ')'"
+                                th:selected="${estudiante.escuela != null and estudiante.escuela.idEscuela == esc.idEscuela}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nivel Educativo <span class="req">*</span></label>
+                        <select th:field="*{nivelEducativo}" required>
+                            <option value="">Seleccione…</option>
+                            <option value="Medio Superior">Medio Superior</option>
+                            <option value="Superior">Superior (Licenciatura / Ingeniería)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Semestre Actual <span class="req">*</span></label>
+                        <select th:field="*{semestre}" required>
+                            <option value="">Seleccione…</option>
+                            <option th:each="s : ${#numbers.sequence(1,12)}"
+                                    th:value="${s}"
+                                    th:text="${s} + '° Semestre'">
+                            </option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Promedio General <span class="req">*</span></label>
+                    <input type="number" th:field="*{promedio}"
+                           step="0.01" min="0" max="10"
+                           placeholder="Ej: 8.50" required>
+                    <span class="ayuda">En escala del 0 al 10. Dato clave para la validación de requisitos.</span>
+                </div>
+
+                <div class="nav-secciones">
+                    <button type="button" class="btn btn-outline" onclick="irSeccion(1)">← Anterior</button>
+                    <button type="button" class="btn btn-primary" onclick="irSeccion(3)">Siguiente: Socioeconómico →</button>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════ -->
+            <!-- SECCIÓN 3: DATOS SOCIOECONÓMICOS — RF-08       -->
+            <!-- ══════════════════════════════════════════════ -->
+            <div class="card" id="seccion3">
+                <div class="card-header">
+                    <h2>🏠 Datos Socioeconómicos</h2>
+                    <p>Información económica y familiar del estudiante — RF-08 (MO-02)</p>
+                </div>
+
+                <div class="aviso-info">
+                    ℹ️ Esta información es necesaria para evaluar el perfil socioeconómico del estudiante
+                    y determinar su elegibilidad para becas que requieren demostrar situación económica (RF-08).
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ocupación del padre / tutor</label>
+                        <input type="text" th:field="*{ocupacionPadre}"
+                               placeholder="Ej: Campesino, Empleado, Comerciante…">
+                    </div>
+                    <div class="form-group">
+                        <label>Ocupación de la madre / tutora</label>
+                        <input type="text" th:field="*{ocupacionMadre}"
+                               placeholder="Ej: Ama de casa, Comerciante…">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ingresos familiares mensuales (MXN)</label>
+                        <input type="number" th:field="*{ingresosMensuales}"
+                               step="0.01" min="0"
+                               placeholder="0.00">
+                        <span class="ayuda">Suma total de ingresos del hogar por mes.</span>
+                    </div>
+                    <div class="form-group">
+                        <label>Situación de vivienda</label>
+                        <select th:field="*{situacionVivienda}">
+                            <option value="">Seleccione…</option>
+                            <option value="Propia">Propia</option>
+                            <option value="Rentada">Rentada</option>
+                            <option value="Prestada">Prestada / Familiar</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="nav-secciones">
+                    <button type="button" class="btn btn-outline" onclick="irSeccion(2)">← Anterior</button>
+                    <button type="button" class="btn btn-primary" onclick="irSeccion(4)">Siguiente: Vulnerabilidad →</button>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════ -->
+            <!-- SECCIÓN 4: POBLACIÓN VULNERABLE — RF-09        -->
+            <!-- ══════════════════════════════════════════════ -->
+            <div class="card" id="seccion4">
+                <div class="card-header">
+                    <h2>🤝 Población Vulnerable</h2>
+                    <p>Información de grupos vulnerables — RF-09 (MO-02)</p>
+                </div>
+
+                <div class="aviso-info">
+                    ℹ️ Según el documento, se registran: indígenas, hablantes de lengua indígena,
+                    personas con discapacidad y afromexicanos. Esta información es clave para los
+                    reportes estadísticos de la Rectoría (MO-04).
+                </div>
+
+                <div class="form-group">
+                    <div class="check-group" onclick="toggleVulnerabilidad()">
+                        <input type="checkbox" th:field="*{vulnerabilidad}"
+                               id="chkVulnerabilidad" value="true"
+                               onchange="toggleVulnerabilidad()">
+                        <label for="chkVulnerabilidad">
+                            El estudiante pertenece a una población vulnerable
+                        </label>
+                    </div>
+                </div>
+
+                <div id="panelVulnerabilidad"
+                     th:classappend="${estudiante.vulnerabilidad} ? ' visible' : ''">
+                    <div class="form-group">
+                        <label>Tipo de vulnerabilidad <span class="req">*</span></label>
+                        <select th:field="*{tipoVulnerabilidad}">
+                            <option value="">Seleccione…</option>
+                            <option value="Indígena">Indígena</option>
+                            <option value="Hablante de lengua indígena">Hablante de lengua indígena</option>
+                            <option value="Discapacidad">Persona con discapacidad</option>
+                            <option value="Afromexicano">Afromexicano</option>
+                        </select>
+                        <span class="ayuda">
+                            Estos grupos tienen prioridad en varias convocatorias de Bienestar y SEP.
+                        </span>
+                    </div>
+                </div>
+
+                <div class="nav-secciones">
+                    <button type="button" class="btn btn-outline" onclick="irSeccion(3)">← Anterior</button>
+                    <button type="submit" class="btn btn-success">💾 Guardar Estudiante</button>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    let seccionActual = 1;
+    const totalSecciones = 4;
+
+    function irSeccion(n) {
+        // Ocultar sección actual
+        document.getElementById('seccion' + seccionActual).classList.remove('visible');
+        document.getElementById('tab' + seccionActual).classList.remove('active');
+        document.getElementById('tab' + seccionActual).classList.add('completado');
+
+        // Mostrar nueva sección
+        seccionActual = n;
+        document.getElementById('seccion' + n).classList.add('visible');
+        document.getElementById('tab' + n).classList.add('active');
+        document.getElementById('tab' + n).classList.remove('completado');
+
+        // Actualizar barra de progreso
+        const pct = (n / totalSecciones) * 100;
+        document.getElementById('barraProgreso').style.width = pct + '%';
+        document.getElementById('textoProgreso').textContent = 'Sección ' + n + ' de ' + totalSecciones;
+
+        // Scroll al tope
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function toggleVulnerabilidad() {
+        const chk   = document.getElementById('chkVulnerabilidad');
+        const panel = document.getElementById('panelVulnerabilidad');
+        if (chk.checked) {
+            panel.classList.add('visible');
+        } else {
+            panel.classList.remove('visible');
+            document.querySelector('[name="tipoVulnerabilidad"]').value = '';
+        }
+    }
+
+    // Si al cargar la página el checkbox ya está marcado (modo editar), mostrar panel
+    window.addEventListener('DOMContentLoaded', () => {
+        const chk = document.getElementById('chkVulnerabilidad');
+        if (chk && chk.checked) {
+            document.getElementById('panelVulnerabilidad').classList.add('visible');
+        }
+
+        // Si hay error, ir a la sección con el campo faltante
+        const error = document.querySelector('.alerta-error');
+        if (error) {
+            const msg = error.textContent.toLowerCase();
+            if (msg.includes('curp') || msg.includes('nombre') || msg.includes('correo') || msg.includes('matrícula')) irSeccion(1);
+            else if (msg.includes('escuela') || msg.includes('promedio') || msg.includes('semestre')) irSeccion(2);
+            else if (msg.includes('ingreso') || msg.includes('vivienda')) irSeccion(3);
+        }
+    });
+</script>
+
+</body>
+</html>

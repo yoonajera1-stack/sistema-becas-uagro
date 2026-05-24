@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Estudiantes - Becas UAGRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --azul: #1a3a6b; --dorado: #c8902a; --sidebar-w: 240px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: #f4f6fb; display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-w); background: var(--azul); min-height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-logo { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo .logo-icon { font-size: 2rem; }
+        .sidebar-logo h2 { color: white; font-size: 0.95rem; font-weight: 700; margin-top: 0.5rem; }
+        .sidebar-logo p { color: rgba(255,255,255,0.5); font-size: 0.75rem; }
+        .sidebar nav { padding: 1rem 0; flex: 1; }
+        .nav-section-label { color: rgba(255,255,255,0.35); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.75rem 1.25rem 0.4rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: rgba(255,255,255,0.75); text-decoration: none; font-size: 0.92rem; font-weight: 500; border-left: 3px solid transparent; transition: background 0.15s; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--dorado); }
+        .nav-item .icon { font-size: 1.1rem; width: 22px; text-align: center; }
+        .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-footer .user-info { color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 0.75rem; }
+        .sidebar-footer .user-info strong { display: block; color: white; font-size: 0.9rem; }
+        .btn-logout { display: block; width: 100%; padding: 0.6rem 1rem; background: rgba(220,38,38,0.2); color: #fca5a5; border: 1px solid rgba(220,38,38,0.3); border-radius: 0.4rem; text-decoration: none; font-size: 0.85rem; text-align: center; }
+        .btn-logout:hover { background: rgba(220,38,38,0.35); color: white; }
+        .main { margin-left: var(--sidebar-w); flex: 1; }
+        .topbar { height: 64px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; position: sticky; top: 0; z-index: 50; }
+        .topbar h1 { font-size: 1.15rem; font-weight: 600; color: var(--azul); }
+        .content { padding: 2rem; }
+
+        /* TOOLBAR */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; }
+        .toolbar-title { font-size: 1.3rem; font-weight: 700; color: #1e293b; }
+
+        /* FILTROS */
+        .filtros-bar {
+            background: white; border-radius: 0.75rem;
+            padding: 1rem 1.25rem; margin-bottom: 1.25rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+            display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;
+        }
+        .filtro-grupo { display: flex; flex-direction: column; gap: 0.35rem; flex: 1; min-width: 180px; }
+        .filtro-grupo label { font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+        .filtro-grupo select,
+        .filtro-grupo input { padding: 0.6rem 0.85rem; border: 1.5px solid #e2e8f0; border-radius: 0.45rem; font-family: 'Outfit', sans-serif; font-size: 0.9rem; color: #1e293b; background: #f9fafb; outline: none; }
+        .filtro-grupo select:focus,
+        .filtro-grupo input:focus { border-color: var(--azul); background: white; }
+        .filtro-acciones { display: flex; gap: 0.6rem; align-items: flex-end; }
+
+        /* CONTADOR */
+        .contador { font-size: 0.85rem; color: #64748b; margin-bottom: 0.75rem; }
+        .contador strong { color: var(--azul); }
+
+        /* BOTONES */
+        .btn { padding: 0.6rem 1.1rem; border: none; border-radius: 0.5rem; text-decoration: none; cursor: pointer; font-size: 0.88rem; font-weight: 600; font-family: 'Outfit', sans-serif; display: inline-flex; align-items: center; gap: 0.4rem; transition: opacity 0.15s; }
+        .btn:hover { opacity: 0.88; }
+        .btn-primary   { background: #059669; color: white; }
+        .btn-azul      { background: var(--azul); color: white; }
+        .btn-outline   { background: white; color: #374151; border: 1.5px solid #d1d5db; }
+        .btn-warning   { background: #f59e0b; color: white; }
+        .btn-sm { padding: 0.35rem 0.75rem; font-size: 0.8rem; }
+
+        /* TABLA */
+        .tabla-wrapper { background: white; border-radius: 0.75rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); overflow: hidden; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: var(--azul); color: white; }
+        thead th { padding: 0.9rem 1.1rem; text-align: left; font-size: 0.82rem; font-weight: 600; letter-spacing: 0.03em; }
+        tbody td { padding: 0.85rem 1.1rem; font-size: 0.88rem; color: #374151; border-bottom: 1px solid #f1f5f9; }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: #f8fafc; }
+        .acciones { display: flex; gap: 0.4rem; }
+        .alerta-success { background: #d1fae5; border-left: 4px solid #059669; color: #065f46; padding: 0.9rem 1.1rem; border-radius: 0.5rem; margin-bottom: 1.25rem; font-size: 0.9rem; }
+        .alerta-error   { background: #fee2e2; border-left: 4px solid #dc2626; color: #991b1b; padding: 0.9rem 1.1rem; border-radius: 0.5rem; margin-bottom: 1.25rem; font-size: 0.9rem; }
+        .vacio { text-align: center; padding: 3rem; color: #9ca3af; font-size: 0.95rem; }
+        .badge { padding: 0.3rem 0.8rem; border-radius: 9999px; font-size: 0.76rem; font-weight: 600; }
+        .badge-activo   { background: #d1fae5; color: #065f46; }
+        .badge-inactivo { background: #fee2e2; color: #991b1b; }
+        .badge-vuln     { background: #fef3c7; color: #92400e; font-size: 0.7rem; margin-left: 0.3rem; }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🎓</div>
+        <h2>Sistema de Becas</h2>
+        <p>UAGRO</p>
+    </div>
+    <nav>
+        <div class="nav-section-label">Principal</div>
+        <a href="/dashboard" class="nav-item"><span class="icon">🏠</span> Inicio</a>
+        <div class="nav-section-label">Gestión</div>
+        <a href="/becas" class="nav-item"><span class="icon">📋</span> Becas</a>
+        <a href="/estudiantes" class="nav-item active"><span class="icon">👨‍🎓</span> Estudiantes</a>
+        <a href="/solicitudes" class="nav-item"><span class="icon">📝</span> Solicitudes</a>
+        <div class="nav-section-label">Sistema</div>
+        <a href="/reportes" class="nav-item"><span class="icon">📊</span> Reportes</a>
+        <a href="/admin" class="nav-item"><span class="icon">⚙️</span> Administración</a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <strong th:text="${usuario != null ? usuario.nombre : 'Usuario'}">Usuario</strong>
+            <!-- ✅ CORREGIDO: session.rol en lugar de usuario.rol?.nombreRol -->
+            <span th:text="${session.rol ?: ''}">Rol</span>
+        </div>
+        <a href="/logout" class="btn-logout">🚪 Cerrar Sesión</a>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="topbar">
+        <h1>👨‍🎓 Gestión de Estudiantes</h1>
+    </div>
+    <div class="content">
+
+        <div class="toolbar">
+            <span class="toolbar-title">Padrón de Estudiantes</span>
+            <a href="/estudiantes/nuevo" class="btn btn-primary">➕ Registrar Nuevo</a>
+        </div>
+
+        <div th:if="${mensaje}" class="alerta-success" th:text="${mensaje}"></div>
+        <div th:if="${error}"   class="alerta-error"   th:text="${error}"></div>
+
+        <!-- BARRA DE FILTROS -->
+        <form th:action="@{/estudiantes}" method="get" class="filtros-bar">
+            <div class="filtro-grupo">
+                <label>🔍 Buscar</label>
+                <input type="text" name="buscar"
+                       th:value="${buscar}"
+                       placeholder="Nombre, matrícula o correo…">
+            </div>
+            <div class="filtro-grupo">
+                <label>🏫 Filtrar por escuela</label>
+                <select name="idEscuela">
+                    <option value="">Todas las escuelas</option>
+                    <option th:each="esc : ${escuelas}"
+                            th:value="${esc.idEscuela}"
+                            th:text="${esc.nombre}"
+                            th:selected="${idEscuelaSeleccionada != null and idEscuelaSeleccionada == esc.idEscuela}">
+                    </option>
+                </select>
+            </div>
+            <div class="filtro-acciones">
+                <button type="submit" class="btn btn-azul">Filtrar</button>
+                <a href="/estudiantes" class="btn btn-outline">Limpiar</a>
+            </div>
+        </form>
+
+        <!-- CONTADOR DE RESULTADOS -->
+        <div class="contador">
+            Mostrando <strong th:text="${totalMostrados}">0</strong> estudiante(s)
+            <span th:if="${idEscuelaSeleccionada != null}"> — filtrado por escuela</span>
+            <span th:if="${buscar != null and !#strings.isEmpty(buscar)}">
+                — búsqueda: "<strong th:text="${buscar}"></strong>"
+            </span>
+        </div>
+
+        <!-- TABLA -->
+        <div class="tabla-wrapper">
+            <table>
+                <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Matrícula</th>
+                    <th>Escuela</th>
+                    <th>Nivel</th>
+                    <th>Semestre</th>
+                    <th>Promedio</th>
+                    <th>Estatus</th>
+                    <th>Acciones</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="estudiante : ${estudiantes}">
+                    <td>
+                        <span th:text="${estudiante.nombre}">Nombre</span>
+                        <!-- Badge vulnerable -->
+                        <span th:if="${estudiante.vulnerabilidad}"
+                              class="badge badge-vuln">🤝 Vulnerable</span>
+                    </td>
+                    <td th:text="${estudiante.matricula}">Matrícula</td>
+                    <td th:text="${estudiante.escuela?.nombre}">Escuela</td>
+                    <td th:text="${estudiante.nivelEducativo}">Nivel</td>
+                    <td th:text="${estudiante.semestre} + '°'">Semestre</td>
+                    <td th:text="${estudiante.promedio}">Promedio</td>
+                    <td>
+                            <span class="badge"
+                                  th:classappend="${estudiante.estatus} ? ' badge-activo' : ' badge-inactivo'"
+                                  th:text="${estudiante.estatus} ? 'Activo' : 'Inactivo'">
+                            </span>
+                    </td>
+                    <td>
+                        <div class="acciones">
+                            <a th:href="@{/estudiantes/editar/{id}(id=${estudiante.idEstudiante})}"
+                               class="btn btn-warning btn-sm">✏️ Editar</a>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(estudiantes)}">
+                    <td colspan="8" class="vacio">
+                        No se encontraron estudiantes con los filtros aplicados.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>

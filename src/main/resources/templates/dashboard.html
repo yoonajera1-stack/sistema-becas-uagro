@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Sistema de Becas UAGRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --azul: #1a3a6b; --azul-claro: #2563eb; --dorado: #c8902a; --sidebar-w: 240px; --header-h: 64px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: #f4f6fb; display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-w); background: var(--azul); min-height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-logo { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo .logo-icon { font-size: 2rem; }
+        .sidebar-logo h2 { color: white; font-size: 0.95rem; font-weight: 700; margin-top: 0.5rem; line-height: 1.3; }
+        .sidebar-logo p { color: rgba(255,255,255,0.5); font-size: 0.75rem; margin-top: 0.2rem; }
+        .sidebar nav { padding: 1rem 0; flex: 1; }
+        .nav-section-label { color: rgba(255,255,255,0.35); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.75rem 1.25rem 0.4rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: rgba(255,255,255,0.75); text-decoration: none; font-size: 0.92rem; font-weight: 500; transition: background 0.15s; border-left: 3px solid transparent; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--dorado); }
+        .nav-item .icon { font-size: 1.1rem; width: 22px; text-align: center; }
+        .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-footer .user-info { color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 0.75rem; }
+        .sidebar-footer .user-info strong { display: block; color: white; font-size: 0.9rem; }
+        .btn-logout { display: block; width: 100%; padding: 0.6rem 1rem; background: rgba(220,38,38,0.2); color: #fca5a5; border: 1px solid rgba(220,38,38,0.3); border-radius: 0.4rem; text-decoration: none; font-size: 0.85rem; font-weight: 500; text-align: center; transition: background 0.15s; }
+        .btn-logout:hover { background: rgba(220,38,38,0.35); color: white; }
+        .main { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; }
+        .topbar { height: var(--header-h); background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; position: sticky; top: 0; z-index: 50; }
+        .topbar h1 { font-size: 1.2rem; font-weight: 600; color: var(--azul); }
+        .topbar .fecha { font-size: 0.85rem; color: #64748b; }
+        .content { padding: 2rem; }
+        .alerta-denegado { background: #fee2e2; border-left: 4px solid #dc2626; color: #991b1b; padding: 0.9rem 1.1rem; border-radius: 0.5rem; margin-bottom: 1.5rem; font-size: 0.9rem; }
+        .bienvenida { background: linear-gradient(135deg, var(--azul) 0%, #2563eb 100%); border-radius: 1rem; padding: 2rem 2.5rem; color: white; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
+        .bienvenida h2 { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .bienvenida p { color: rgba(255,255,255,0.8); font-size: 0.95rem; }
+        .bienvenida .emoji { font-size: 3rem; }
+        .section-title { font-size: 1rem; font-weight: 600; color: #374151; margin-bottom: 1rem; }
+        .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+        .card-modulo { background: white; border-radius: 0.75rem; padding: 1.5rem; text-decoration: none; box-shadow: 0 1px 4px rgba(0,0,0,0.07); transition: transform 0.15s, box-shadow 0.15s; border-top: 4px solid transparent; display: flex; flex-direction: column; gap: 0.75rem; }
+        .card-modulo:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+        .card-modulo.c-verde  { border-top-color: #059669; }
+        .card-modulo.c-azul   { border-top-color: #2563eb; }
+        .card-modulo.c-dorado { border-top-color: #c8902a; }
+        .card-modulo.c-morado { border-top-color: #7c3aed; }
+        .card-modulo.c-rojo   { border-top-color: #dc2626; }
+        .card-modulo .mod-icon { font-size: 2rem; }
+        .card-modulo .mod-titulo { font-size: 1rem; font-weight: 700; color: #1e293b; }
+        .card-modulo .mod-desc { font-size: 0.82rem; color: #64748b; line-height: 1.5; }
+        .card-modulo .mod-link { font-size: 0.8rem; font-weight: 600; color: var(--azul-claro); margin-top: auto; }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🎓</div>
+        <h2>Sistema de Becas</h2>
+        <p>UAGRO</p>
+    </div>
+    <nav>
+        <div class="nav-section-label">Principal</div>
+        <a href="/dashboard" class="nav-item active"><span class="icon">🏠</span> Inicio</a>
+        <div class="nav-section-label">Gestión</div>
+        <a href="/becas" class="nav-item"><span class="icon">📋</span> Becas</a>
+        <a href="/estudiantes" class="nav-item"><span class="icon">👨‍🎓</span> Estudiantes</a>
+        <a href="/solicitudes" class="nav-item"><span class="icon">📝</span> Solicitudes</a>
+        <div class="nav-section-label">Sistema</div>
+        <a href="/reportes" class="nav-item"><span class="icon">📊</span> Reportes</a>
+        <a href="/admin" class="nav-item"><span class="icon">⚙️</span> Administración</a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <strong th:text="${usuario != null ? usuario.nombre : 'Usuario'}">Usuario</strong>
+            <!-- ✅ CORREGIDO: session.rol en lugar de usuario.rol?.nombreRol -->
+            <span th:text="${session.rol ?: ''}">Rol</span>
+        </div>
+        <a href="/logout" class="btn-logout">🚪 Cerrar Sesión</a>
+    </div>
+</aside>
+
+<div class="main">
+    <div class="topbar">
+        <h1>Panel Principal</h1>
+        <span class="fecha" id="fecha-hoy"></span>
+    </div>
+    <div class="content">
+
+        <!-- Aviso acceso denegado (FA_001 C.U.6) -->
+        <div th:if="${param.accesoDenegado}" class="alerta-denegado">
+            🔒 <strong>Acceso denegado.</strong>
+            Solo los usuarios con rol <strong>Administrador</strong> pueden acceder a ese módulo.
+        </div>
+
+        <div class="bienvenida">
+            <div>
+                <h2 th:text="'Bienvenido, ' + ${usuario != null ? usuario.nombre : 'Usuario'} + ' 👋'">Bienvenido</h2>
+                <p>Gestiona becas, estudiantes y solicitudes desde un solo lugar.</p>
+            </div>
+            <div class="emoji">🎓</div>
+        </div>
+
+        <p class="section-title">Módulos del Sistema</p>
+        <div class="cards-grid">
+            <a href="/becas" class="card-modulo c-verde">
+                <div class="mod-icon">📋</div>
+                <div class="mod-titulo">Becas</div>
+                <div class="mod-desc">Registra y administra convocatorias de instancias externas.</div>
+                <div class="mod-link">Ir a Becas →</div>
+            </a>
+            <a href="/estudiantes" class="card-modulo c-azul">
+                <div class="mod-icon">👨‍🎓</div>
+                <div class="mod-titulo">Estudiantes</div>
+                <div class="mod-desc">Consulta y registra el padrón de estudiantes beneficiarios.</div>
+                <div class="mod-link">Ir a Estudiantes →</div>
+            </a>
+            <a href="/solicitudes" class="card-modulo c-dorado">
+                <div class="mod-icon">📝</div>
+                <div class="mod-titulo">Solicitudes</div>
+                <div class="mod-desc">Gestiona solicitudes y avanza su estado de validación.</div>
+                <div class="mod-link">Ir a Solicitudes →</div>
+            </a>
+            <a href="/reportes" class="card-modulo c-morado">
+                <div class="mod-icon">📊</div>
+                <div class="mod-titulo">Reportes</div>
+                <div class="mod-desc">Estadísticas por escuela, género, nivel y vulnerabilidad.</div>
+                <div class="mod-link">Ir a Reportes →</div>
+            </a>
+            <a href="/admin" class="card-modulo c-rojo">
+                <div class="mod-icon">⚙️</div>
+                <div class="mod-titulo">Administración</div>
+                <div class="mod-desc">Gestiona usuarios del sistema. Solo para Administradores.</div>
+                <div class="mod-link">Ir a Admin →</div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const d = new Date();
+    document.getElementById('fecha-hoy').textContent =
+        d.toLocaleDateString('es-MX', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+</script>
+</body>
+</html>

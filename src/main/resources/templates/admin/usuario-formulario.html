@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${modo == 'crear'} ? 'Nuevo Usuario - Admin UAGRO' : 'Editar Usuario - Admin UAGRO'">Usuario</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --azul: #1a3a6b; --dorado: #c8902a; --sidebar-w: 240px; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Outfit', sans-serif; background: #f4f6fb; display: flex; min-height: 100vh; }
+
+    /* SIDEBAR */
+    .sidebar { width: var(--sidebar-w); background: var(--azul); min-height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; z-index: 100; }
+    .sidebar-logo { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    .sidebar-logo .logo-icon { font-size: 2rem; }
+    .sidebar-logo h2 { color: white; font-size: 0.95rem; font-weight: 700; margin-top: 0.5rem; }
+    .sidebar-logo p { color: rgba(255,255,255,0.5); font-size: 0.75rem; }
+    .sidebar nav { padding: 1rem 0; flex: 1; }
+    .nav-section-label { color: rgba(255,255,255,0.35); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.75rem 1.25rem 0.4rem; }
+    .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: rgba(255,255,255,0.75); text-decoration: none; font-size: 0.92rem; font-weight: 500; border-left: 3px solid transparent; transition: background 0.15s; }
+    .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--dorado); }
+    .nav-item .icon { font-size: 1.1rem; width: 22px; text-align: center; }
+    .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.1); }
+    .sidebar-footer .user-info { color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 0.75rem; }
+    .sidebar-footer .user-info strong { display: block; color: white; font-size: 0.9rem; }
+    .btn-logout { display: block; width: 100%; padding: 0.6rem 1rem; background: rgba(220,38,38,0.2); color: #fca5a5; border: 1px solid rgba(220,38,38,0.3); border-radius: 0.4rem; text-decoration: none; font-size: 0.85rem; text-align: center; }
+    .btn-logout:hover { background: rgba(220,38,38,0.35); color: white; }
+
+    /* MAIN */
+    .main { margin-left: var(--sidebar-w); flex: 1; }
+    .topbar { height: 64px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; padding: 0 2rem; position: sticky; top: 0; z-index: 50; }
+    .topbar h1 { font-size: 1.15rem; font-weight: 600; color: var(--azul); }
+    .content { padding: 2rem; max-width: 700px; }
+
+    /* ALERTAS */
+    .alerta { padding: 0.9rem 1.1rem; border-radius: 0.5rem; margin-bottom: 1.25rem; font-size: 0.9rem; }
+    .alerta-error   { background: #fee2e2; border-left: 4px solid #dc2626; color: #991b1b; }
+    .alerta-success { background: #d1fae5; border-left: 4px solid #059669; color: #065f46; }
+
+    /* CARD */
+    .card { background: white; border-radius: 0.75rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); padding: 2rem; }
+    .card-header { margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid #f1f5f9; }
+    .card-header h2 { font-size: 1.05rem; font-weight: 700; color: var(--azul); }
+    .card-header p { font-size: 0.83rem; color: #64748b; margin-top: 0.25rem; }
+
+    /* SECCIÓN */
+    .seccion-titulo { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--azul); padding: 0.5rem 0.75rem; background: #f1f5f9; border-radius: 0.375rem; margin: 1.5rem 0 1.1rem; }
+
+    /* FORM */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; margin-bottom: 0.45rem; font-size: 0.85rem; font-weight: 600; color: #374151; }
+    .form-group label .req { color: #dc2626; margin-left: 2px; }
+    .form-group input,
+    .form-group select {
+        width: 100%; padding: 0.75rem 0.9rem;
+        border: 1.5px solid #e2e8f0; border-radius: 0.5rem;
+        font-family: 'Outfit', sans-serif; font-size: 0.92rem; color: #1e293b;
+        transition: border-color 0.2s; outline: none; background: #f9fafb;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--azul); background: #fff; }
+    .form-group .ayuda { font-size: 0.78rem; color: #94a3b8; margin-top: 0.3rem; }
+
+    /* AVISO ROL */
+    .aviso-rol { background: #fef9ec; border-left: 4px solid var(--dorado); padding: 0.85rem 1rem; border-radius: 0 0.4rem 0.4rem 0; font-size: 0.83rem; color: #78350f; margin-bottom: 1.25rem; }
+    .aviso-rol ul { margin-top: 0.4rem; padding-left: 1.25rem; }
+    .aviso-rol ul li { margin-bottom: 0.2rem; }
+
+    /* BOTONES */
+    .btn-group { display: flex; gap: 1rem; margin-top: 2rem; }
+    .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; text-decoration: none; cursor: pointer; font-size: 0.92rem; font-weight: 600; font-family: 'Outfit', sans-serif; display: inline-flex; align-items: center; gap: 0.4rem; transition: opacity 0.15s; }
+    .btn:hover { opacity: 0.88; }
+    .btn-primary   { background: var(--azul); color: white; }
+    .btn-secondary { background: #6b7280; color: white; }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">🎓</div>
+    <h2>Sistema de Becas</h2>
+    <p>UAGRO</p>
+  </div>
+  <nav>
+    <div class="nav-section-label">Principal</div>
+    <a href="/dashboard" class="nav-item"><span class="icon">🏠</span> Inicio</a>
+    <div class="nav-section-label">Gestión</div>
+    <a href="/becas" class="nav-item"><span class="icon">📋</span> Becas</a>
+    <a href="/estudiantes" class="nav-item"><span class="icon">👨‍🎓</span> Estudiantes</a>
+    <a href="/solicitudes" class="nav-item"><span class="icon">📝</span> Solicitudes</a>
+    <div class="nav-section-label">Sistema</div>
+    <a href="/reportes" class="nav-item"><span class="icon">📊</span> Reportes</a>
+    <a href="/admin" class="nav-item active"><span class="icon">⚙️</span> Administración</a>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="user-info">
+      <strong th:text="${usuario != null ? usuario.nombre : 'Usuario'}">Usuario</strong>
+      <span th:text="${usuario != null ? usuario.rol?.nombreRol : ''}">Rol</span>
+    </div>
+    <a href="/logout" class="btn-logout">🚪 Cerrar Sesión</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <h1 th:text="${modo == 'crear'} ? '➕ Registrar Nuevo Usuario' : '✏️ Editar Usuario'">Usuario</h1>
+  </div>
+  <div class="content">
+
+    <div th:if="${error}"   class="alerta alerta-error"   th:text="${error}"></div>
+    <div th:if="${mensaje}" class="alerta alerta-success" th:text="${mensaje}"></div>
+
+    <!-- Aviso sobre roles -->
+    <div class="aviso-rol">
+      <strong>⚙️ Roles del sistema (FA_001 — C.U.6)</strong>
+      <ul>
+        <li><strong>Administrador:</strong> acceso total — gestión de usuarios y bitácora.</li>
+        <li><strong>Coordinador:</strong> registra becas, estudiantes y solicitudes.</li>
+        <li><strong>Validador:</strong> valida documentación y avanza el estado de solicitudes.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h2 th:text="${modo == 'crear'} ? 'Datos del nuevo usuario' : 'Actualizar datos del usuario'"></h2>
+        <p>RF-25 y RF-27 (MO-06) — Solo el Administrador puede gestionar usuarios.</p>
+      </div>
+
+      <form th:action="${modo == 'crear'} ? '/admin/usuarios/guardar' : '/admin/usuarios/actualizar/' + ${personal.idPersonal}"
+            method="post"
+            th:object="${personal}">
+
+        <input type="hidden" th:field="*{idPersonal}">
+
+        <!-- DATOS GENERALES -->
+        <div class="seccion-titulo">👤 Datos del usuario</div>
+
+        <div class="form-group">
+          <label>Nombre Completo <span class="req">*</span></label>
+          <input type="text" th:field="*{nombre}"
+                 placeholder="Apellido Apellido Nombre" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Correo Institucional <span class="req">*</span></label>
+            <input type="email" th:field="*{correo}"
+                   placeholder="usuario@uagro.mx" required>
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="tel" th:field="*{telefono}"
+                   placeholder="747 000 0000">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Departamento</label>
+          <input type="text" th:field="*{departamento}"
+                 placeholder="Ej: Departamento de Becas">
+        </div>
+
+        <!-- ROL Y ACCESO -->
+        <div class="seccion-titulo">🔐 Rol y acceso — RF-27</div>
+
+        <!-- ✅ name="idRol" como @RequestParam -->
+        <div class="form-group">
+          <label>Rol asignado <span class="req">*</span></label>
+          <select name="idRol" required>
+            <option value="">Seleccione un rol…</option>
+            <option th:each="rol : ${roles}"
+                    th:value="${rol.idRol}"
+                    th:text="${rol.nombreRol} + ' — ' + ${rol.descripcion}"
+                    th:selected="${personal.rol != null and personal.rol.idRol == rol.idRol}">
+            </option>
+          </select>
+        </div>
+
+        <!-- Estatus solo en modo editar -->
+        <div class="form-group" th:if="${modo == 'editar'}">
+          <label>Estatus del usuario</label>
+          <select th:field="*{estatus}">
+            <option value="true"  th:selected="${personal.estatus}">Activo</option>
+            <option value="false" th:selected="${!personal.estatus}">Inactivo</option>
+          </select>
+        </div>
+
+        <!-- CONTRASEÑA -->
+        <div class="seccion-titulo">🔑 Contraseña</div>
+
+        <div class="form-group" th:if="${modo == 'crear'}">
+          <label>Contraseña <span class="req">*</span></label>
+          <input type="password" th:field="*{contraseña}"
+                 placeholder="Mínimo 8 caracteres" required>
+          <span class="ayuda">Se guardará encriptada. El usuario podrá cambiarla después.</span>
+        </div>
+
+        <!-- En edición: campo separado para nueva contraseña (opcional) -->
+        <div th:if="${modo == 'editar'}">
+          <div class="form-group">
+            <label>Nueva contraseña</label>
+            <input type="password" name="nuevaContrasena"
+                   placeholder="Dejar vacío para no cambiarla">
+            <span class="ayuda">Solo completar si se desea cambiar la contraseña actual.</span>
+          </div>
+        </div>
+
+        <div class="btn-group">
+          <button type="submit" class="btn btn-primary">
+            💾 <span th:text="${modo == 'crear'} ? 'Registrar Usuario' : 'Guardar Cambios'">Guardar</span>
+          </button>
+          <a href="/admin" class="btn btn-secondary">✖ Cancelar</a>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

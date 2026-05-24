@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Detalle de Solicitud - Becas UAGRO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --azul: #1a3a6b; --dorado: #c8902a; --sidebar-w: 240px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: #f4f6fb; display: flex; min-height: 100vh; }
+        .sidebar { width: var(--sidebar-w); background: var(--azul); min-height: 100vh; position: fixed; top: 0; left: 0; display: flex; flex-direction: column; z-index: 100; }
+        .sidebar-logo { padding: 1.5rem 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-logo .logo-icon { font-size: 2rem; }
+        .sidebar-logo h2 { color: white; font-size: 0.95rem; font-weight: 700; margin-top: 0.5rem; }
+        .sidebar-logo p { color: rgba(255,255,255,0.5); font-size: 0.75rem; }
+        .sidebar nav { padding: 1rem 0; flex: 1; }
+        .nav-section-label { color: rgba(255,255,255,0.35); font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; padding: 0.75rem 1.25rem 0.4rem; }
+        .nav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem; color: rgba(255,255,255,0.75); text-decoration: none; font-size: 0.92rem; font-weight: 500; border-left: 3px solid transparent; transition: background 0.15s; }
+        .nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.1); color: white; border-left-color: var(--dorado); }
+        .nav-item .icon { font-size: 1.1rem; width: 22px; text-align: center; }
+        .sidebar-footer { padding: 1rem 1.25rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        .sidebar-footer .user-info { color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-bottom: 0.75rem; }
+        .sidebar-footer .user-info strong { display: block; color: white; font-size: 0.9rem; }
+        .btn-logout { display: block; width: 100%; padding: 0.6rem 1rem; background: rgba(220,38,38,0.2); color: #fca5a5; border: 1px solid rgba(220,38,38,0.3); border-radius: 0.4rem; text-decoration: none; font-size: 0.85rem; text-align: center; }
+        .btn-logout:hover { background: rgba(220,38,38,0.35); color: white; }
+        .main { margin-left: var(--sidebar-w); flex: 1; }
+        .topbar { height: 64px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; position: sticky; top: 0; z-index: 50; }
+        .topbar h1 { font-size: 1.15rem; font-weight: 600; color: var(--azul); }
+        .content { padding: 2rem; max-width: 820px; }
+
+        /* FOLIO HEADER */
+        .folio-header { background: linear-gradient(135deg, var(--azul) 0%, #2563eb 100%); border-radius: 0.75rem; padding: 1.5rem 2rem; color: white; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; }
+        .folio-header .folio { font-size: 1.3rem; font-weight: 700; }
+        .folio-header .fecha { font-size: 0.85rem; opacity: 0.8; margin-top: 0.25rem; }
+
+        /* BADGES */
+        .badge { padding: 0.4rem 1rem; border-radius: 9999px; font-size: 0.82rem; font-weight: 700; }
+        .badge-pendiente  { background: #fef3c7; color: #92400e; }
+        .badge-completa   { background: #dbeafe; color: #1e40af; }
+        .badge-enviada    { background: #ede9fe; color: #5b21b6; }
+        .badge-aprobada   { background: #dcfce7; color: #14532d; }
+        .badge-rechazada  { background: #fee2e2; color: #991b1b; }
+
+        /* FLUJO */
+        .card { background: white; border-radius: 0.75rem; box-shadow: 0 1px 4px rgba(0,0,0,0.07); padding: 1.5rem; margin-bottom: 1.25rem; }
+        .card-title { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--azul); margin-bottom: 1.1rem; padding-bottom: 0.75rem; border-bottom: 1px solid #f1f5f9; }
+
+        .flujo { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+        .flujo-paso { padding: 0.45rem 0.9rem; border-radius: 9999px; font-size: 0.8rem; font-weight: 600; opacity: 0.35; }
+        .flujo-paso.activo { opacity: 1; box-shadow: 0 0 0 2px currentColor; }
+        .flujo-paso.completado { opacity: 0.6; }
+        .flujo-paso.p1 { background: #fef3c7; color: #92400e; }
+        .flujo-paso.p2 { background: #dbeafe; color: #1e40af; }
+        .flujo-paso.p3 { background: #ede9fe; color: #5b21b6; }
+        .flujo-paso.p4v { background: #dcfce7; color: #14532d; }
+        .flujo-paso.p4r { background: #fee2e2; color: #991b1b; }
+        .flujo-arrow { color: #cbd5e1; font-size: 0.9rem; }
+
+        .flujo-nota { margin-top: 0.85rem; background: #fef9ec; border-left: 3px solid var(--dorado); padding: 0.6rem 0.9rem; border-radius: 0 0.4rem 0.4rem 0; font-size: 0.82rem; color: #78350f; }
+
+        /* DETALLE GRID */
+        .detalle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .detalle-item label { display: block; font-size: 0.75rem; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+        .detalle-item span { font-size: 0.92rem; color: #1e293b; font-weight: 500; }
+        .detalle-item.full { grid-column: 1 / -1; }
+
+        /* OBSERVACIONES */
+        .obs-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.85rem 1rem; font-size: 0.9rem; color: #374151; min-height: 60px; }
+        .obs-vacio { color: #9ca3af; font-style: italic; }
+
+        /* BOTONES */
+        .btn { padding: 0.65rem 1.25rem; border: none; border-radius: 0.5rem; text-decoration: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; font-family: 'Outfit', sans-serif; display: inline-flex; align-items: center; gap: 0.4rem; transition: opacity 0.15s; }
+        .btn:hover { opacity: 0.88; }
+        .btn-outline  { background: white; color: #374151; border: 1.5px solid #d1d5db; }
+        .btn-success  { background: #059669; color: white; }
+        .btn-blue     { background: #2563eb; color: white; }
+        .btn-danger   { background: #dc2626; color: white; }
+        .acciones { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+        /* MODAL */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; align-items: center; justify-content: center; }
+        .modal-overlay.visible { display: flex; }
+        .modal { background: white; border-radius: 0.75rem; padding: 2rem; width: 100%; max-width: 440px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        .modal h3 { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; }
+        .modal p  { font-size: 0.9rem; color: #64748b; margin-bottom: 1.25rem; }
+        .modal label { font-size: 0.85rem; font-weight: 600; color: #374151; display: block; margin-bottom: 0.4rem; }
+        .modal textarea { width: 100%; border: 1px solid #d1d5db; border-radius: 0.4rem; padding: 0.75rem; font-family: 'Outfit', sans-serif; font-size: 0.9rem; resize: vertical; margin-bottom: 1rem; }
+        .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1rem; }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <div class="logo-icon">🎓</div>
+        <h2>Sistema de Becas</h2>
+        <p>UAGRO</p>
+    </div>
+    <nav>
+        <div class="nav-section-label">Principal</div>
+        <a href="/dashboard" class="nav-item"><span class="icon">🏠</span> Inicio</a>
+        <div class="nav-section-label">Gestión</div>
+        <a href="/becas" class="nav-item"><span class="icon">📋</span> Becas</a>
+        <a href="/estudiantes" class="nav-item"><span class="icon">👨‍🎓</span> Estudiantes</a>
+        <a href="/solicitudes" class="nav-item active"><span class="icon">📝</span> Solicitudes</a>
+        <div class="nav-section-label">Sistema</div>
+        <a href="/reportes" class="nav-item"><span class="icon">📊</span> Reportes</a>
+        <a href="/admin" class="nav-item"><span class="icon">⚙️</span> Administración</a>
+    </nav>
+    <div class="sidebar-footer">
+        <div class="user-info">
+            <strong th:text="${usuario != null ? usuario.nombre : 'Usuario'}">Usuario</strong>
+            <span th:text="${session.rol ?: ''}">Rol</span>
+        </div>
+        <a href="/logout" class="btn-logout">🚪 Cerrar Sesión</a>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<div class="main">
+    <div class="topbar">
+        <h1>📄 Detalle de Solicitud</h1>
+        <a href="/solicitudes" class="btn btn-outline">← Regresar</a>
+    </div>
+    <div class="content">
+
+        <!-- FOLIO Y ESTADO -->
+        <div class="folio-header">
+            <div>
+                <div class="folio" th:text="${solicitud.folio}">Folio</div>
+                <div class="fecha"
+                     th:text="'Registrada el ' + ${#temporals.format(solicitud.fechaSolicitud, 'dd/MM/yyyy HH:mm')}">
+                    Fecha
+                </div>
+            </div>
+            <span class="badge"
+                  th:classappend="${solicitud.estado == 'Pendiente'}               ? ' badge-pendiente' :
+                                  (${solicitud.estado == 'Documentación Completa'} ? ' badge-completa'  :
+                                  (${solicitud.estado == 'Enviada a Instancia'}    ? ' badge-enviada'   :
+                                  (${solicitud.estado == 'Aprobada'}               ? ' badge-aprobada'  :
+                                                                                     ' badge-rechazada')))"
+                  th:text="${solicitud.estado}">Estado</span>
+        </div>
+
+        <!-- FLUJO DE ESTADOS -->
+        <div class="card">
+            <div class="card-title">📊 Progreso de la solicitud</div>
+            <div class="flujo">
+                <span class="flujo-paso p1"
+                      th:classappend="${solicitud.estado == 'Pendiente'} ? ' activo' : ' completado'">
+                    📄 Pendiente
+                </span>
+                <span class="flujo-arrow">→</span>
+                <span class="flujo-paso p2"
+                      th:classappend="${solicitud.estado == 'Documentación Completa'} ? ' activo' :
+                                      (${solicitud.estado == 'Pendiente'} ? '' : ' completado')">
+                    ✅ Doc. Completa
+                </span>
+                <span class="flujo-arrow">→</span>
+                <span class="flujo-paso p3"
+                      th:classappend="${solicitud.estado == 'Enviada a Instancia'} ? ' activo' :
+                                      (${solicitud.estado == 'Aprobada' or solicitud.estado == 'Rechazada'} ? ' completado' : '')">
+                    📤 Enviada
+                </span>
+                <span class="flujo-arrow">→</span>
+                <span class="flujo-paso p4v"
+                      th:classappend="${solicitud.estado == 'Aprobada'} ? ' activo' : ''">
+                    🎉 Aprobada
+                </span>
+                <span class="flujo-arrow">/</span>
+                <span class="flujo-paso p4r"
+                      th:classappend="${solicitud.estado == 'Rechazada'} ? ' activo' : ''">
+                    ❌ Rechazada
+                </span>
+            </div>
+            <div class="flujo-nota">
+                ⚠️ La UAGRO <strong>no aprueba ni rechaza</strong> becas.
+                Solo valida documentación y envía a la instancia externa, quien decide.
+            </div>
+        </div>
+
+        <!-- DATOS DEL ESTUDIANTE -->
+        <div class="card">
+            <div class="card-title">👨‍🎓 Datos del Estudiante</div>
+            <div class="detalle-grid">
+                <div class="detalle-item">
+                    <label>Nombre</label>
+                    <span th:text="${solicitud.estudiante?.nombre}">—</span>
+                </div>
+                <div class="detalle-item">
+                    <label>Matrícula</label>
+                    <span th:text="${solicitud.estudiante?.matricula}">—</span>
+                </div>
+                <div class="detalle-item">
+                    <label>Correo</label>
+                    <span th:text="${solicitud.estudiante?.correo}">—</span>
+                </div>
+                <div class="detalle-item">
+                    <label>Escuela</label>
+                    <span th:text="${solicitud.estudiante?.escuela?.nombre}">—</span>
+                </div>
+                <div class="detalle-item">
+                    <label>Nivel Educativo</label>
+                    <span th:text="${solicitud.estudiante?.nivelEducativo}">—</span>
+                </div>
+                <div class="detalle-item">
+                    <label>Promedio</label>
+                    <span th:text="${solicitud.estudiante?.promedio}">—</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATOS DE LA BECA -->
+        <div class="card">
+            <div class="card-title">📋 Datos de la Convocatoria</div>
+            <div class="detalle-grid">
+                <div class="detalle-item">
+                    <label>Beca</label>
+                    <span th:text="${solicitud.beca?.nombre}">—</span>
+                </div>
+                <div class="detalle-item">
+                    <label>Tipo</label>
+                    <span th:text="${solicitud.beca?.tipo}">—</span>
+                </div>
+                <div class="detalle-item">
+                    <label>Instancia que otorga</label>
+                    <span th:text="${solicitud.beca?.institucion?.nombre}">—</span>
+                </div>
+                <div class="detalle-item">
+                    <label>Monto</label>
+                    <span th:text="${solicitud.beca?.monto != null} ? '$' + ${#numbers.formatDecimal(solicitud.beca.monto, 1, 2)} : '—'">—</span>
+                </div>
+                <div class="detalle-item">
+                    <label>Periodo</label>
+                    <span th:text="${solicitud.periodo}">—</span>
+                </div>
+                <div class="detalle-item">
+                    <label>Registrada por</label>
+                    <span th:text="${solicitud.personalRegistro?.nombre ?: 'Sistema'}">—</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- OBSERVACIONES -->
+        <div class="card">
+            <div class="card-title">💬 Observaciones y seguimiento</div>
+            <div style="margin-bottom:1rem;">
+                <label style="font-size:0.78rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:0.4rem;">
+                    Observaciones internas
+                </label>
+                <div class="obs-box">
+                    <span th:if="${solicitud.observaciones != null and !#strings.isEmpty(solicitud.observaciones)}"
+                          th:text="${solicitud.observaciones}"></span>
+                    <span th:if="${solicitud.observaciones == null or #strings.isEmpty(solicitud.observaciones)}"
+                          class="obs-vacio">Sin observaciones registradas.</span>
+                </div>
+            </div>
+            <div th:if="${solicitud.respuestaInstancia != null and !#strings.isEmpty(solicitud.respuestaInstancia)}">
+                <label style="font-size:0.78rem;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:0.4rem;">
+                    Respuesta de la instancia externa
+                </label>
+                <div class="obs-box" th:text="${solicitud.respuestaInstancia}"></div>
+            </div>
+        </div>
+
+        <!-- ACCIONES -->
+        <div class="card"
+             th:if="${solicitud.estado != 'Aprobada' and solicitud.estado != 'Rechazada'}">
+            <div class="card-title">⚡ Acciones disponibles</div>
+            <div class="acciones">
+                <button th:if="${solicitud.estado == 'Pendiente'}"
+                        class="btn btn-success"
+                        onclick="abrirModal('Documentación Completa')">
+                    ✅ Marcar Documentación Completa
+                </button>
+                <button th:if="${solicitud.estado == 'Documentación Completa'}"
+                        class="btn btn-blue"
+                        onclick="abrirModal('Enviada a Instancia')">
+                    📤 Marcar como Enviada a Instancia
+                </button>
+                <th:block th:if="${solicitud.estado == 'Enviada a Instancia'}">
+                    <button class="btn btn-success" onclick="abrirModal('Aprobada')">🎉 Registrar como Aprobada</button>
+                    <button class="btn btn-danger"  onclick="abrirModal('Rechazada')">❌ Registrar como Rechazada</button>
+                </th:block>
+            </div>
+        </div>
+
+        <a href="/solicitudes" class="btn btn-outline" style="margin-top:0.5rem;">← Volver a la lista</a>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalEstado">
+    <div class="modal">
+        <h3 id="modalTitulo">Confirmar acción</h3>
+        <p id="modalDescripcion"></p>
+        <form id="formEstado" method="post"
+              th:action="@{/solicitudes/avanzar-estado/{id}(id=${solicitud.idSolicitud})}">
+            <input type="hidden" name="nuevoEstado"  id="inputNuevoEstado">
+            <input type="hidden" name="vistaActual"  value="all">
+            <label>Observaciones (opcional)</label>
+            <textarea name="observaciones" rows="3"
+                      placeholder="Ej: Falta constancia de inscripción..."></textarea>
+            <div id="campoRespuesta" style="display:none;">
+                <label>Respuesta de la instancia externa</label>
+                <textarea name="respuestaInstancia" rows="2"
+                          placeholder="Ej: Aprobada por Bienestar, folio BN-2026-00123"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline" onclick="cerrarModal()">Cancelar</button>
+                <button type="submit" class="btn btn-success" id="btnConfirmar">Confirmar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const titulos = {
+        'Documentación Completa': '✅ Marcar Documentación Completa',
+        'Enviada a Instancia':    '📤 Confirmar envío a instancia',
+        'Aprobada':               '🎉 Registrar como Aprobada',
+        'Rechazada':              '❌ Registrar como Rechazada'
+    };
+    const descripciones = {
+        'Documentación Completa': 'Confirmas que todos los documentos están completos y correctos.',
+        'Enviada a Instancia':    'Confirmas que el expediente fue enviado a la instancia externa.',
+        'Aprobada':               'La instancia externa notificó que esta beca fue APROBADA. La UAGRO solo registra el resultado.',
+        'Rechazada':              'La instancia externa notificó que esta solicitud fue RECHAZADA. La UAGRO solo registra el resultado.'
+    };
+    function abrirModal(nuevoEstado) {
+        document.getElementById('modalTitulo').textContent      = titulos[nuevoEstado];
+        document.getElementById('modalDescripcion').textContent = descripciones[nuevoEstado];
+        document.getElementById('inputNuevoEstado').value       = nuevoEstado;
+        const esFinal = nuevoEstado === 'Aprobada' || nuevoEstado === 'Rechazada';
+        document.getElementById('campoRespuesta').style.display = esFinal ? 'block' : 'none';
+        document.getElementById('btnConfirmar').className =
+            'btn ' + (nuevoEstado === 'Rechazada' ? 'btn-danger' : 'btn-success');
+        document.getElementById('modalEstado').classList.add('visible');
+    }
+    function cerrarModal() {
+        document.getElementById('modalEstado').classList.remove('visible');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') cerrarModal(); });
+</script>
+</body>
+</html>
